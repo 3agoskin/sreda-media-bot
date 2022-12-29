@@ -1,1 +1,1 @@
-Telegram bot for sreda.medipa
+Telegram bot for sreda.media

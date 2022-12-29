@@ -1,4 +1,5 @@
 """Лучший формат оффера ever"""
+# еще сделать сообщение для Ильи Красильщика
 from aiogram import types
 from aiogram.dispatcher.middlewares import BaseMiddleware
 
@@ -12,5 +13,4 @@ class OfferMiddleware(BaseMiddleware):
     async def on_process_message(self, message: types.Message, _):
         if str(message.from_user.username) == str(self.offer_username) and self.sent_offet == False:
             self.sent_offet = True 
-            await message.answer("Оля, Привет!\nЭто специальное сообщение только для тебя!\n\nЭто мое предлоежние работы в sreda.media тебе!\n\nВот ссылка на оффер!\n\nС большой благодарностью, Кирилл Загоскин!")
-        
+            await message.answer("Оля, Привет! \n\nтут место для оффера")
