@@ -14,11 +14,11 @@ create table survey_new_year_tree(
     where_bought text,
     when_bought text,
     which_eco text,
-    why_eco text,
+    why_eco text
 );
 
 create table sharing(
    id integer primary key,
    tg_user_id integer,
-   tg_user_unique_link text,
+   tg_user_unique_link text
 );
