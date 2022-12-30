@@ -1,7 +1,9 @@
 import os
 import logging
+import datetime
 import sqlite3
 import redis
+import pytz
 
 import config
 
@@ -53,11 +55,12 @@ class Database:
             self._conn.commit()
         cursor.close()
 
-    async def insert_users(self, user_id: int, leagues: str):
-        insert_query = f"""INSERT INTO users (id, leagues)
-                           VALUES ({user_id}, "{leagues}")"""
+    async def insert_start_user_and_source(self, tg_user_id: int, tg_username: str, come_from: str):
+        created = self._get_now_formatted()
+        insert_query = f"""INSERT INTO command_start (created, tg_user_id, tg_username, come_from)
+                           VALUES ("{created}", {tg_user_id}, "{tg_username}", "{come_from}")"""
         self._execute_query(insert_query)
-        logging.info(f"Leagues for user {user_id} added")
+        logging.info(f"Start user {tg_user_id} from {come_from} added")
 
     async def select_users(self, user_id: int):
         select_query = f"""SELECT leagues from users 
@@ -83,6 +86,15 @@ class Database:
         else:
             await self.insert_users(user_id, leagues)
 
+    def _get_now_datetime(self) -> datetime.datetime:
+        """Возвращает сег. datetime с учетом временной зоны Мск."""
+        tz = pytz.timezone("Europe/Moscow")
+        now = datetime.datetime.now(tz)
+        return now
+
+    def _get_now_formatted(self) -> str:
+        """Возвращает сегоднящнюю дату строкой"""
+        return self._get_now_datetime().strftime("%Y-%m-%d %H:%M:%S")
 
 # создание объектов cache и database
 cache = Cache(

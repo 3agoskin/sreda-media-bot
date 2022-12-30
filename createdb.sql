@@ -8,6 +8,7 @@ create table command_start(
 
 create table survey_new_year_tree(
     id integer primary key,
+    created datetime,
     tg_user_id integer,
     witch_tree text,
     why_this_choise text,

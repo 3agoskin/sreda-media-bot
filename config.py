@@ -11,5 +11,6 @@ BOT_DB_NAME = "survey_new_year_tree"
 
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
-
 REDIS_PASSWORD = None
+
+WEEK = 60 * 60 * 24 * 7
