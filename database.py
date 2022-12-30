@@ -30,9 +30,9 @@ class Database:
         connection = sqlite3.connect(f"{self.name}.db")
         logging.info("Database created")
         cursor = connection.cursor()
-        cursor.execute('''CREATE TABLE users 
-                          (id INTEGER PRIMARY KEY,
-                           leagues VARCHAR NOT NULL);''')
+        with open("createdb.sql", "r") as f:
+            sql = f.read()
+        cursor.executescript(sql)
         connection.commit()
         cursor.close()
 
