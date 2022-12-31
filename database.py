@@ -55,36 +55,32 @@ class Database:
             self._conn.commit()
         cursor.close()
 
-    async def insert_start_user_and_source(self, tg_user_id: int, tg_username: str, come_from: str):
+    async def insert_start_user_and_source(self, tg_user_id: int, tg_username: str, tg_firstname:str, come_from: str):
         created = self._get_now_formatted()
-        insert_query = f"""INSERT INTO command_start (created, tg_user_id, tg_username, come_from)
-                           VALUES ("{created}", {tg_user_id}, "{tg_username}", "{come_from}")"""
+        insert_query = f"""INSERT INTO command_start (created, tg_user_id, tg_username, tg_firstname, come_from)
+                           VALUES ("{created}", {tg_user_id}, "{tg_username}", "{tg_firstname}", "{come_from}")"""
         self._execute_query(insert_query)
         logging.info(f"Start user {tg_user_id} from {come_from} added")
+    
+    async def insert_survey_result(self, tg_user_id: int, city: str, witch_tree: str, why_this_choise:str, where_bought:str, when_bought:str, which_eco: str, why_eco: str, result_survey: str, result_survey_opinion: str):
+        created = self._get_now_formatted()
+        insert_query = f"""INSERT INTO survey_new_year_tree (created, tg_user_id, city, witch_tree, why_this_choise, where_bought, when_bought, which_eco, why_eco, result_survey, result_survey_opinion)
+                           VALUES ("{created}", {tg_user_id}, "{city}", "{witch_tree}", "{why_this_choise}", "{where_bought}", "{when_bought}", "{which_eco}", "{why_eco}", "{result_survey}", "{result_survey_opinion}")"""
+        self._execute_query(insert_query)
+        logging.info(f"Survey result {tg_user_id} added")
+    
+    async def insert_santa(self, from_tg_user_id: int, to_tg_user_id: int, from_tg_user_username: str, from_tg_user_name:str, postcard_text:str, show_author:bool):
+        insert_query = f"""INSERT INTO postcard (from_tg_user_id, to_tg_user_id, from_tg_user_username, from_tg_user_name, postcard_text, show_author)
+                           VALUES ({from_tg_user_id}, {to_tg_user_id}, "{from_tg_user_username}", "{from_tg_user_name}", "{postcard_text}", "{show_author}")"""
+        self._execute_query(insert_query)
+        logging.info(f"Santa from {from_tg_user_id} to {to_tg_user_id} added")
 
-    async def select_users(self, user_id: int):
-        select_query = f"""SELECT leagues from users 
-                           where id = {user_id}"""
+
+    async def select_user_from_command_start(self, tg_user_id: int):
+        select_query = f"""SELECT tg_firstname from command_start
+                           where tg_user_id = {tg_user_id}"""
         record = self._execute_query(select_query, select=True)
         return record
-
-    async def update_users(self, user_id: int, leagues: str):
-        update_query = f"""Update users 
-                              set leagues = "{leagues}" where id = {user_id}"""
-        self._execute_query(update_query)
-        logging.info(f"Leagues for user {user_id} updated")
-
-    async def delete_users(self, user_id: int):
-        delete_query = f"""DELETE FROM users WHERE id = {user_id}"""
-        self._execute_query(delete_query)
-        logging.info(f"User {user_id} deleted")
-
-    async def insert_or_update_users(self, user_id: int, leagues: str):
-        user_leagues = await self.select_users(user_id)
-        if user_leagues is not None:
-            await self.update_users(user_id, leagues)
-        else:
-            await self.insert_users(user_id, leagues)
 
     def _get_now_datetime(self) -> datetime.datetime:
         """Возвращает сег. datetime с учетом временной зоны Мск."""
