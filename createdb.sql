@@ -29,5 +29,5 @@ create table postcard(
     from_tg_user_username text,
     from_tg_user_name text,
     postcard_text text,
-    show_author boolean,
+    show_author boolean
 );

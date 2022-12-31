@@ -67,6 +67,7 @@ async def secret_santa(message: types.Message, state: FSMContext):
 
 @dp.callback_query_handler(lambda c: str(c.data).startswith('santa'), state=Form.santa)
 async def save_santa_text(callback_query: types.CallbackQuery, state: FSMContext):
+    await state.finish()
     parametr = callback_query.data.split('_')[-1]
     from_id = callback_query.from_user.id
     from_username = callback_query.from_user.username
@@ -101,6 +102,7 @@ async def save_santa_text(callback_query: types.CallbackQuery, state: FSMContext
                 chat_id=callback_query.from_user.id,
                 text="Отправим с вашим именем, вас тоже уведомим об отправке\n\nОпрос по ёлкам - /start"
             )
+    
     
 
 
