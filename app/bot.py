@@ -420,7 +420,6 @@ async def survey_step10(message: types.Message, state: FSMContext):
 
 @dp.callback_query_handler(lambda c: str(c.data).startswith('survey_finish'))
 async def survey_step10(callback_query: types.CallbackQuery, state: FSMContext):
-    await bot.send_message(callback_query.from_user.id, '*Результат опроса*\n\n⏬🌲⏬🌲⏬🌲', parse_mode=types.ParseMode.MARKDOWN_V2)
     await types.ChatActions.upload_photo()
     media = types.MediaGroup()
     media_instructions = types.MediaGroup()
@@ -534,10 +533,6 @@ async def survey_step10(callback_query: types.CallbackQuery, state: FSMContext):
     link_share = 'stories_img/share.jpg'
     media.attach_photo(types.InputFile(link_share))
     await asyncio.sleep(2)
-    await bot.send_media_group(
-        chat_id=callback_query.from_user.id,
-        media=media,
-    )
     user_deep_link = await get_start_link(callback_query.from_user.id, encode=True)
 
     await bot.send_message(
@@ -597,6 +592,14 @@ async def survey_step10(callback_query: types.CallbackQuery, state: FSMContext):
             sep='\n'
         ),
         parse_mode=types.ParseMode.MARKDOWN_V2)
+        
+    #результат опроса
+    await bot.send_message(callback_query.from_user.id, '*Результат опроса*\n\n⏬🌲⏬🌲⏬🌲', parse_mode=types.ParseMode.MARKDOWN_V2)
+
+    await bot.send_media_group(
+        chat_id=callback_query.from_user.id,
+        media=media,
+    )
 
 
 async def on_shutdown(dp):
