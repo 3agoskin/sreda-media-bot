@@ -33,7 +33,6 @@ class Form(StatesGroup):
     eco = State()
     feedback = State()
 
-    
 
 
 
@@ -52,7 +51,18 @@ async def start_handler(message: types.Message, state: FSMContext):
         await message.answer(msg.ref_text.format(name=santa_secret))
 
     elif await s.after_survey(message):
-        return await message.answer(text="Скоро будут новые опросы!")
+        return await bot.send_message(
+            chat_id=message.from_user.id,
+            text=md.text(
+                md.bold("Скоро будут новые опросы"),
+                md.text(),
+                md.text("Но можно поиграть в тайного Санту и написать друзьям что\-то приятное\. Для этого нужно пройти в бота по ссылке от другого человека\. А мы все запишем и передадим, анонимно или напрямую от вас\."),
+                md.text(),
+                md.text('\_'),
+                md.italic('«Среда» — медиа с улиц Ханты-Мансийска'),
+                sep='\n'
+        ),
+        parse_mode=types.ParseMode.MARKDOWN_V2)
 
     else:
         state.finish()
@@ -582,9 +592,9 @@ async def survey_step10(callback_query: types.CallbackQuery, state: FSMContext):
             md.text(''),
             md.text('6\. Вставьте скопированную ранее ссылку в поле url\. Готово\!'),
             md.text(),
-            md.text('Через пару дней мы отправим вам кажое обращение к боту по этой ссылке'),
+            md.text('Через пару дней мы отправим вам, кто прошел по вашей ссылке и написал вам что\-то приятное'),
             md.text(),
-            md.text('Выкладывайте\! Вы великолепны\! Оставайтесь таким же в 2023\!'),
+            md.text('Выкладывайте\! Вы великолепны, оставайтесь таким же в 2023\!'),
             md.text(),
             md.text(),
             md.text('\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_'),
@@ -592,7 +602,7 @@ async def survey_step10(callback_query: types.CallbackQuery, state: FSMContext):
             sep='\n'
         ),
         parse_mode=types.ParseMode.MARKDOWN_V2)
-        
+
     #результат опроса
     await bot.send_message(callback_query.from_user.id, '*Результат опроса*\n\n⏬🌲⏬🌲⏬🌲', parse_mode=types.ParseMode.MARKDOWN_V2)
 
@@ -600,6 +610,22 @@ async def survey_step10(callback_query: types.CallbackQuery, state: FSMContext):
         chat_id=callback_query.from_user.id,
         media=media,
     )
+
+    await bot.send_message(
+        chat_id = callback_query.from_user.id, 
+        text=md.text(
+            md.bold('Не пропустите новые публикации, подписывайтесь на нас в соцсетях:'),
+            md.text('▪️ ' ,md.link('Инстаграм', 'https://www.instagram.com/sreda_media/'), "\*", sep=''),
+            md.text('▪️', md.link('Телеграм', 'https://t.me/SredaMediaChannel')),
+            md.text('▪️', md.link('ВК', 'https://vk.com/sredamediapublic')),
+            md.text('▪️', md.text('/start — для новых опросов')),
+            md.text(),
+            md.text('\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_'),
+            md.italic('*принадлежит Meta,\nпризнанной экстремистской в России'),
+            sep='\n'
+        ), 
+        parse_mode=types.ParseMode.MARKDOWN_V2,
+        disable_web_page_preview=True)
 
 
 async def on_shutdown(dp):
