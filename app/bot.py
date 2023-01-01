@@ -13,17 +13,18 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.utils.deep_linking import get_start_link, decode_payload
 
 import config
-from config import TOKEN, WEEK
+from config import TOKEN, WEEK, OFFER_USERNAME
 from app.dialogs import msg
 from database import database as db, cache
 import app.service as s
+from middlewares import OfferMiddleware
 
 # стандартный код создания бота
 bot = Bot(token=TOKEN)
 
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
-dp.middleware.setup(LoggingMiddleware())
+dp.middleware.setup(OfferMiddleware(OFFER_USERNAME))
 
 
 class Form(StatesGroup):
@@ -32,10 +33,15 @@ class Form(StatesGroup):
     eco = State()
     feedback = State()
 
+    
+
+
+
 
 @dp.message_handler(commands=['start'])
 async def start_handler(message: types.Message, state: FSMContext):
     """Обработка команды start. Предложение начать опрос"""
+
     santa_secret = await s.bot_start(message)
     print(f"{santa_secret=}")
     if santa_secret:
@@ -44,6 +50,10 @@ async def start_handler(message: types.Message, state: FSMContext):
         await Form.santa.set()
         cache.setex(f"santa_to_{message.from_user.id}", WEEK, to_id)
         await message.answer(msg.ref_text.format(name=santa_secret))
+
+    elif await s.after_survey(message):
+        return await message.answer(text="Скоро будут новые опросы!")
+
     else:
         state.finish()
         msg_survey = await message.answer(
@@ -71,7 +81,9 @@ async def save_santa_text(callback_query: types.CallbackQuery, state: FSMContext
     parametr = callback_query.data.split('_')[-1]
     from_id = callback_query.from_user.id
     from_username = callback_query.from_user.username
-    from_name = callback_query.from_user.first_name + ' ' + callback_query.from_user.last_name
+    f_name = callback_query.from_user.first_name
+    l_name = s.clear_last_name(callback_query.from_user.last_name)
+    from_name = f_name + ' ' + l_name
     to_id = cache.get(f"santa_to_{callback_query.from_user.id}")
     print(f"{to_id=}")
     postcard_text = cache.get(f"santa_{callback_query.from_user.id}")
@@ -384,24 +396,67 @@ async def survey_step9(callback_query: types.CallbackQuery):
                     reply_markup=types.InlineKeyboardMarkup()
                 )
 
+
 @dp.message_handler(content_types=['text'], state=Form.feedback)
 async def survey_step10(message: types.Message, state: FSMContext):
-    await bot.send_message(message.from_user.id, 'Спасибо!\n\nСейчас (5-10 секунд) мы вам отправим результат вашего опроса в картинках.\n\nИ инструкцию, как нам можно помочь, а вам сделать подарок!\n\n')
-    await types.ChatActions.upload_photo()
     await state.finish()
     cache.setex(f"result_survey_opinion_{message.from_user.id}", WEEK, message.text)
+    await bot.send_message(
+        chat_id=message.from_user.id,
+        text="Спасибо! Для нас каждый отзыв важен.\n\n\nСейчас мы вам отправим результат вашего опроса в картинках.\n\nИ ещё инструкцию, как нам можно помочь, а вам сделать подарок!\n\n\nНо нам надо узнать вашу Операционную систему на телефоне, чтобы показать вам верную инструкицю. У вас какая ОС?",
+        reply_markup=InlineKeyboardMarkup().row(InlineKeyboardButton('🍏 iOS', callback_data='survey_finish_ios'))\
+            .row(InlineKeyboardButton('🤖 Android', callback_data='survey_finish_android'))
+    )
+
+
+
+
+
+
+
+
+
+
+
+@dp.callback_query_handler(lambda c: str(c.data).startswith('survey_finish'))
+async def survey_step10(callback_query: types.CallbackQuery, state: FSMContext):
+    await bot.send_message(callback_query.from_user.id, '*Результат опроса*\n\n⏬🌲⏬🌲⏬🌲', parse_mode=types.ParseMode.MARKDOWN_V2)
+    await types.ChatActions.upload_photo()
     media = types.MediaGroup()
+    media_instructions = types.MediaGroup()
+    parametr_phone = callback_query.data.split('_')[-1]
+    match parametr_phone:
+        case 'ios':
+            media_instructions.attach_photo(types.InputFile("instuctions/ios/one.png"))
+            media_instructions.attach_photo(types.InputFile("instuctions/ios/two.png"))
+            media_instructions.attach_photo(types.InputFile("instuctions/ios/three.png"))
+            media_instructions.attach_photo(types.InputFile("instuctions/ios/four.png"))
+            media_instructions.attach_photo(types.InputFile("instuctions/ios/five.png"))
+            media_instructions.attach_photo(types.InputFile("instuctions/ios/six.png"))
+
+            cache.setex(f"user_phone_{callback_query.from_user.id}", WEEK, parametr_phone)
+        case 'android':
+            media_instructions.attach_photo(types.InputFile("instuctions/android/one.png"))
+            media_instructions.attach_photo(types.InputFile("instuctions/android/two.png"))
+            media_instructions.attach_photo(types.InputFile("instuctions/android/three.png"))
+            media_instructions.attach_photo(types.InputFile("instuctions/android/four.png"))
+            media_instructions.attach_photo(types.InputFile("instuctions/android/five.png"))
+            media_instructions.attach_photo(types.InputFile("instuctions/android/six.png"))
+            
+
+            cache.setex(f"user_phone_{callback_query.from_user.id}", WEEK, parametr_phone)
 
     # собранные данные
-    city = cache.get(f"result_city_{message.from_user.id}")
-    tree = cache.get(f"result_tree_{message.from_user.id}")
-    reason_tree = cache.get(f"result_reason_{message.from_user.id}")
-    where_did_buy = cache.get(f"result_where_did_buy_{message.from_user.id}")
-    when_did_buy = cache.get(f"result_when_did_buy_{message.from_user.id}")
-    opinion_eco = cache.get(f"result_opinion_eco_tree_{message.from_user.id}")
-    open_opinion_eco = cache.get(f"result_open_opinion_eco_tree_{message.from_user.id}")
-    result_survey = cache.get(f"result_survey_{message.from_user.id}")
-    result_survey_opinion = cache.get(f"result_survey_opinion_{message.from_user.id}")
+    city = cache.get(f"result_city_{callback_query.from_user.id}")
+    tree = cache.get(f"result_tree_{callback_query.from_user.id}")
+    reason_tree = cache.get(f"result_reason_{callback_query.from_user.id}")
+    where_did_buy = cache.get(f"result_where_did_buy_{callback_query.from_user.id}")
+    when_did_buy = cache.get(f"result_when_did_buy_{callback_query.from_user.id}")
+    opinion_eco = cache.get(f"result_opinion_eco_tree_{callback_query.from_user.id}")
+    open_opinion_eco = cache.get(f"result_open_opinion_eco_tree_{callback_query.from_user.id}")
+    result_survey = cache.get(f"result_survey_{callback_query.from_user.id}")
+    result_survey_opinion = cache.get(f"result_survey_opinion_{callback_query.from_user.id}")
+    user_phone = cache.get(f"user_phone_{callback_query.from_user.id}")
     
     match tree:
         case 'realtree':
@@ -480,14 +535,24 @@ async def survey_step10(message: types.Message, state: FSMContext):
     media.attach_photo(types.InputFile(link_share))
     await asyncio.sleep(2)
     await bot.send_media_group(
-        chat_id=message.from_user.id,
+        chat_id=callback_query.from_user.id,
         media=media,
     )
-    user_deep_link = await get_start_link(message.from_user.id, encode=True)
+    user_deep_link = await get_start_link(callback_query.from_user.id, encode=True)
 
+    await bot.send_message(
+        chat_id=callback_query.from_user.id,
+        text=f"*Инструкция для {parametr_phone}*\n\n📱⏬📨⏬🎁⏬",
+        parse_mode=types.ParseMode.MARKDOWN_V2
+    )
+
+    await bot.send_media_group(
+        chat_id=callback_query.from_user.id,
+        media=media_instructions,
+    )
 
     await db.insert_survey_result(
-        tg_user_id=message.from_user.id,
+        tg_user_id=callback_query.from_user.id,
         city=city,
         witch_tree=tree,
         why_this_choise=reason_tree,
@@ -496,39 +561,42 @@ async def survey_step10(message: types.Message, state: FSMContext):
         which_eco=opinion_eco,
         why_eco=open_opinion_eco,
         result_survey=result_survey,
-        result_survey_opinion=result_survey_opinion
+        result_survey_opinion=result_survey_opinion,
+        user_phone = user_phone
     )
 
 
     await bot.send_message(
-        chat_id=message.from_user.id, 
+        chat_id=callback_query.from_user.id, 
         text=md.text(
-            md.bold('Инструкция'),
+            md.bold('И текстом ⏬'),
             md.text(),
-            md.text('Расскажите про наш опрос в соцсетях и выложите персональную ссылку\. Так друзья смогут написать вам открытку, анонимно или напрямую'),
+            md.text('Расскажите про наш опрос в соцсетях и выложите персональную ссылку\.\nТак друзья смогут написать вам открытку, анонимно или напрямую'),
             md.text(),
-            md.text('1\. Сохраните картинки в ваш телефон; Скопируйте ссылку\.'),
+            md.text('1\. Нажмите на вашу персональную ссылку ниже, она скопирует автоматически ⏬\.'),
             md.text(),
-            md.text(md.code(user_deep_link)),
+            md.text(md.bold('Ваша ссылка:') , md.code(user_deep_link)),
             md.text(),
-            md.text('2\. Откройте Instagram\*; Пройдите в сторис; Выберите картинки из фотоплёнки\.'),
+            md.text('2\. Выберите картинки\.'),
             md.text(''),
-            md.text('3\. Нажмите на стикер; Выберите в списке «ссылку»; Вставьте в поле URL\.'),
+            md.text('3\. Сохраните их на свое устройство\.'),
             md.text(''),
-            md.text('4\. Выкладывайте\! Вы великолепны\! Оставайтесь таким же в 2023\.'),
+            md.text('4\. Переходите в Instagram\*, откройте редактор сторис, добавьте сохраненные картинки, прожмите последнюю с подарками и нажмите на стикер, чтобы добавить ссылку\.'),
+            md.text(''),
+            md.text('5\. И выберите "ссылка" в списке элементов\.'),
+            md.text(''),
+            md.text('6\. Вставьте скопированную ранее ссылку в поле url\. Готово\!'),
             md.text(),
-            md.italic('*принадлежит Meta, признанной экстремистской в России'),
+            md.text('Через пару дней мы отправим вам кажое обращение к боту по этой ссылке'),
+            md.text(),
+            md.text('Выкладывайте\! Вы великолепны\! Оставайтесь таким же в 2023\!'),
+            md.text(),
+            md.text(),
+            md.text('\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_'),
+            md.italic('*принадлежит Meta,\nпризнанной экстремистской в России'),
             sep='\n'
         ),
         parse_mode=types.ParseMode.MARKDOWN_V2)
-
-
-# @dp.message_handler()
-# async def test_message(message: types.Message):
-#     # имя юзера из настроек телеграма
-#     print(message.get_args())
-#     user_name = message.from_user.first_name
-#     await message.answer(msg.test.format(name=user_name)) # охуенно! 
 
 
 async def on_shutdown(dp):

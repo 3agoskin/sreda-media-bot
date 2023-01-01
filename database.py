@@ -62,10 +62,10 @@ class Database:
         self._execute_query(insert_query)
         logging.info(f"Start user {tg_user_id} from {come_from} added")
     
-    async def insert_survey_result(self, tg_user_id: int, city: str, witch_tree: str, why_this_choise:str, where_bought:str, when_bought:str, which_eco: str, why_eco: str, result_survey: str, result_survey_opinion: str):
+    async def insert_survey_result(self, tg_user_id: int, city: str, witch_tree: str, why_this_choise:str, where_bought:str, when_bought:str, which_eco: str, why_eco: str, result_survey: str, result_survey_opinion: str, user_phone:str):
         created = self._get_now_formatted()
-        insert_query = f"""INSERT INTO survey_new_year_tree (created, tg_user_id, city, witch_tree, why_this_choise, where_bought, when_bought, which_eco, why_eco, result_survey, result_survey_opinion)
-                           VALUES ("{created}", {tg_user_id}, "{city}", "{witch_tree}", "{why_this_choise}", "{where_bought}", "{when_bought}", "{which_eco}", "{why_eco}", "{result_survey}", "{result_survey_opinion}")"""
+        insert_query = f"""INSERT INTO survey_new_year_tree (created, tg_user_id, city, witch_tree, why_this_choise, where_bought, when_bought, which_eco, why_eco, result_survey, result_survey_opinion, user_phone)
+                           VALUES ("{created}", {tg_user_id}, "{city}", "{witch_tree}", "{why_this_choise}", "{where_bought}", "{when_bought}", "{which_eco}", "{why_eco}", "{result_survey}", "{result_survey_opinion}", "{user_phone}")"""
         self._execute_query(insert_query)
         logging.info(f"Survey result {tg_user_id} added")
     
@@ -81,6 +81,13 @@ class Database:
                            where tg_user_id = {tg_user_id}"""
         record = self._execute_query(select_query, select=True)
         return record
+
+    async def select_user_from_survey_new_year_tree(self, tg_user_id: int):
+        select_query = f"""SELECT id from survey_new_year_tree
+                           where tg_user_id = {tg_user_id}"""
+        record = self._execute_query(select_query, select=True)
+        return record
+
 
     def _get_now_datetime(self) -> datetime.datetime:
         """Возвращает сег. datetime с учетом временной зоны Мск."""

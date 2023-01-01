@@ -92,6 +92,11 @@ async def _secret_santa(deeplink):
     return to_name, payload
 
 
+async def after_survey(message: types.Message):
+    tg_user_id = message.from_user.id
+    exist = await db.select_user_from_survey_new_year_tree(tg_user_id)
+    if exist: 
+        return True
 
 
 

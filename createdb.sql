@@ -19,7 +19,8 @@ create table survey_new_year_tree(
     which_eco text,
     why_eco text,
     result_survey text,
-    result_survey_opinion text
+    result_survey_opinion text,
+    user_phone text
 );
 
 create table postcard(
