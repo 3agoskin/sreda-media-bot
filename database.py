@@ -70,8 +70,8 @@ class Database:
         logging.info(f"Survey result {tg_user_id} added")
     
     async def insert_santa(self, from_tg_user_id: int, to_tg_user_id: int, from_tg_user_username: str, from_tg_user_name:str, postcard_text:str, show_author:bool):
-        insert_query = f"""INSERT INTO postcard (from_tg_user_id, to_tg_user_id, from_tg_user_username, from_tg_user_name, postcard_text, show_author)
-                           VALUES ({from_tg_user_id}, {to_tg_user_id}, "{from_tg_user_username}", "{from_tg_user_name}", "{postcard_text}", "{show_author}")"""
+        insert_query = f"""INSERT INTO postcard (from_tg_user_id, to_tg_user_id, from_tg_user_username, from_tg_user_name, postcard_text, show_author, send)
+                           VALUES ({from_tg_user_id}, {to_tg_user_id}, "{from_tg_user_username}", "{from_tg_user_name}", "{postcard_text}", "{show_author}", "False")"""
         self._execute_query(insert_query)
         logging.info(f"Santa from {from_tg_user_id} to {to_tg_user_id} added")
 
