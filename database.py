@@ -44,11 +44,15 @@ class Database:
             self.create_db()
         return sqlite3.connect(f"{self.name}.db")
 
-    def _execute_query(self, query, select=False):
+    def _execute_query(self, query, select=False, fetchone=True):
         cursor = self._conn.cursor()
         cursor.execute(query)
-        if select:
+        if select and fetchone:
             records = cursor.fetchone()
+            cursor.close()
+            return records
+        elif select and not fetchone:
+            records = cursor.fetchall()
             cursor.close()
             return records
         else:
@@ -87,6 +91,16 @@ class Database:
                            where tg_user_id = {tg_user_id}"""
         record = self._execute_query(select_query, select=True)
         return record
+
+    async def select_postcard_from_secter_santa(self):
+        select_query = f'''SELECT id ,from_tg_user_id, to_tg_user_id, from_tg_user_username, from_tg_user_name, postcard_text, show_author from postcard
+                           where send="False"'''
+        record = self._execute_query(select_query, select=True, fetchone=False)
+        return record
+    
+    async def update_send_poscard(self, id: int):
+        update_query = f'''UPDATE postcard SET send="True" WHERE id={id}'''
+        self._execute_query(update_query)
 
 
     def _get_now_datetime(self) -> datetime.datetime:
