@@ -86,6 +86,11 @@ class Database:
         record = self._execute_query(select_query, select=True)
         return record
 
+    async def select_all_users_from_command_start(self):
+        select_query = f"""SELECT distinct tg_user_id from command_start"""
+        record = self._execute_query(select_query, select=True, fetchone=False)
+        return record
+
     async def select_user_from_survey_new_year_tree(self, tg_user_id: int):
         select_query = f"""SELECT id from survey_new_year_tree
                            where tg_user_id = {tg_user_id}"""
