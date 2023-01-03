@@ -66,6 +66,20 @@ async def start_handler(message: types.Message, state: FSMContext):
 
     else:
         state.finish()
+        await bot.send_message(
+            chat_id=message.from_user.id,
+            text="""Пара технических моментов. 
+Чтобы завершить опрос полностью, нужно будет:
+
+1. Написать мнение, какая елка экологичнее. Если не хотите писать, пропустите, нажав /start
+
+2. Написать отзыв про опрос. Пропустить этот пункт можно так же нажав /start
+
+3. Финальный вопрос – укажите вашу OS на телефоне: iOS или Android, чтобы бот выдал вам нужную инструкцию и записал ваши ответы.
+
+И всё, начинайте опрос и завершайте его до конца!""",
+            
+        )
         msg_survey = await message.answer(
             msg.survey_offer, 
             parse_mode=types.ParseMode.MARKDOWN_V2,
