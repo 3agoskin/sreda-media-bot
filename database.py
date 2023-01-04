@@ -4,6 +4,7 @@ import datetime
 import sqlite3
 import redis
 import pytz
+import csv
 
 import config
 
@@ -106,6 +107,21 @@ class Database:
     async def update_send_poscard(self, id: int):
         update_query = f'''UPDATE postcard SET send="True" WHERE id={id}'''
         self._execute_query(update_query)
+
+    async def get_data(self) -> str:
+        logging.info("Exporting data into CSV............")
+        select_query = '''SELECT * FROM survey_new_year_tree;'''
+        cursor = self._conn.cursor()
+        cursor.execute(select_query)
+
+        with open("survey_new_year_tree.csv", "w") as csv_file:
+            csv_writer = csv.writer(csv_file, dialect='excel')
+            csv_writer.writerow([i[0] for i in cursor.description])
+            csv_writer.writerows(cursor)
+        
+        dirpath = os.getcwd() + "/survey_new_year_tree.csv"
+        logging.info("Data exported Successfully into {}".format(dirpath))
+        return "survey_new_year_tree.csv"
 
 
     def _get_now_datetime(self) -> datetime.datetime:
