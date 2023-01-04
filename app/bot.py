@@ -54,7 +54,7 @@ async def start_handler(message: types.Message, state: FSMContext):
             text=md.text(
                 md.bold("Скоро будут новые опросы"),
                 md.text(),
-                md.text("Как сделаем - отправим вам уведомление!"),
+                md.text("Как сделаем \- отправим вам уведомление\!"),
                 md.text(),
                 md.text('\_'),
                 md.italic('«Среда» — медиа с улиц Ханты-Мансийска'),
