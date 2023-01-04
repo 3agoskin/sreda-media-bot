@@ -35,28 +35,26 @@ class Form(StatesGroup):
 
 
 
-
-
+@dp.message_handler(commands=['data'])
+async def data (message: types.Message):
+    path_file = await db.get_data()
+    await bot.send_document(
+        chat_id=message.from_user.id,
+        document=types.InputFile(
+            path_or_bytesio=path_file,
+            filename='survey_new_year_tree.csv'),
+        caption='Данные с опроса по ёлка в csv формате'
+        )
+        
+@dp.message_handler()
 @dp.message_handler(commands=['start'])
 async def start_handler(message: types.Message, state: FSMContext):
-    """Обработка команды start. Предложение начать опрос"""
-
-    santa_secret = await s.bot_start(message)
-    print(f"{santa_secret=}")
-    if santa_secret:
-        santa_secret, to_id = santa_secret
-        santa_secret, = santa_secret
-        await Form.santa.set()
-        cache.setex(f"santa_to_{message.from_user.id}", WEEK, to_id)
-        await message.answer(msg.ref_text.format(name=santa_secret))
-
-    elif await s.after_survey(message):
-        return await bot.send_message(
+    await bot.send_message(
             chat_id=message.from_user.id,
             text=md.text(
                 md.bold("Скоро будут новые опросы"),
                 md.text(),
-                md.text("Но можно поиграть в тайного Санту и написать друзьям что\-то приятное\. Для этого нужно пройти в бота по ссылке от другого человека\. А мы все запишем и передадим, анонимно или напрямую от вас\."),
+                md.text("Как сделаем - отправим вам уведомление!"),
                 md.text(),
                 md.text('\_'),
                 md.italic('«Среда» — медиа с улиц Ханты-Мансийска'),
@@ -64,27 +62,54 @@ async def start_handler(message: types.Message, state: FSMContext):
         ),
         parse_mode=types.ParseMode.MARKDOWN_V2)
 
-    else:
-        state.finish()
-        await bot.send_message(
-            chat_id=message.from_user.id,
-            text="""Пара технических моментов. 
-Чтобы завершить опрос полностью, нужно будет:
 
-1. Написать мнение, какая елка экологичнее. Если не хотите писать, пропустите, нажав /start
+# @dp.message_handler(commands=['start'])
+# async def start_handler(message: types.Message, state: FSMContext):
+#     """Обработка команды start. Предложение начать опрос"""
 
-2. Написать отзыв про опрос. Пропустить этот пункт можно так же нажав /start
+#     santa_secret = await s.bot_start(message)
+#     print(f"{santa_secret=}")
+#     if santa_secret:
+#         santa_secret, to_id = santa_secret
+#         santa_secret, = santa_secret
+#         await Form.santa.set()
+#         cache.setex(f"santa_to_{message.from_user.id}", WEEK, to_id)
+#         await message.answer(msg.ref_text.format(name=santa_secret))
 
-3. Финальный вопрос – укажите вашу OS на телефоне: iOS или Android, чтобы бот выдал вам нужную инструкцию и записал ваши ответы.
+#     elif await s.after_survey(message):
+#         return await bot.send_message(
+#             chat_id=message.from_user.id,
+#             text=md.text(
+#                 md.bold("Скоро будут новые опросы"),
+#                 md.text(),
+#                 md.text("Но можно поиграть в тайного Санту и написать друзьям что\-то приятное\. Для этого нужно пройти в бота по ссылке от другого человека\. А мы все запишем и передадим, анонимно или напрямую от вас\."),
+#                 md.text(),
+#                 md.text('\_'),
+#                 md.italic('«Среда» — медиа с улиц Ханты-Мансийска'),
+#                 sep='\n'
+#         ),
+#         parse_mode=types.ParseMode.MARKDOWN_V2)
 
-И всё, начинайте опрос и завершайте его до конца!""",
-            
-        )
-        msg_survey = await message.answer(
-            msg.survey_offer, 
-            parse_mode=types.ParseMode.MARKDOWN_V2,
-            reply_markup=InlineKeyboardMarkup().add(InlineKeyboardButton('Погнали к опросу', callback_data='survey_start')))
-        cache.setex(f"survey_msg_to_{message.from_user.id}", WEEK, msg_survey.message_id)
+#     else:
+#         state.finish()
+#         await bot.send_message(
+#             chat_id=message.from_user.id,
+#             text="""Пара технических моментов. 
+# Чтобы завершить опрос полностью, нужно будет:
+
+# 1. Написать мнение, какая елка экологичнее. Если не хотите писать, пропустите, нажав /start
+
+# 2. Написать отзыв про опрос. Пропустить этот пункт можно так же нажав /start
+
+# 3. Финальный вопрос – укажите вашу OS на телефоне: iOS или Android, чтобы бот выдал вам нужную инструкцию и записал ваши ответы.
+
+# И всё, начинайте опрос и завершайте его до конца!""")
+
+#         msg_survey = await message.answer(
+#             msg.survey_offer, 
+#             parse_mode=types.ParseMode.MARKDOWN_V2,
+#             reply_markup=InlineKeyboardMarkup().add(InlineKeyboardButton('Погнали к опросу', callback_data='survey_start')))
+#         cache.setex(f"survey_msg_to_{message.from_user.id}", WEEK, msg_survey.message_id)
     
 
 
@@ -450,7 +475,9 @@ async def survey_step10(callback_query: types.CallbackQuery, state: FSMContext):
     parametr_phone = callback_query.data.split('_')[-1]
     match parametr_phone:
         case 'ios':
-            media_instructions.attach_photo(types.InputFile("instuctions/ios/one.png"))
+            media_instructions.attach_photo(
+                photo=types.InputFile("instuctions/ios/one.png"),
+                caption='ios')
             media_instructions.attach_photo(types.InputFile("instuctions/ios/two.png"))
             media_instructions.attach_photo(types.InputFile("instuctions/ios/three.png"))
             media_instructions.attach_photo(types.InputFile("instuctions/ios/four.png"))
@@ -459,7 +486,9 @@ async def survey_step10(callback_query: types.CallbackQuery, state: FSMContext):
 
             cache.setex(f"user_phone_{callback_query.from_user.id}", WEEK, parametr_phone)
         case 'android':
-            media_instructions.attach_photo(types.InputFile("instuctions/android/one.png"))
+            media_instructions.attach_photo(
+                photo=types.InputFile("instuctions/android/one.png"),
+                caption='android')
             media_instructions.attach_photo(types.InputFile("instuctions/android/two.png"))
             media_instructions.attach_photo(types.InputFile("instuctions/android/three.png"))
             media_instructions.attach_photo(types.InputFile("instuctions/android/four.png"))

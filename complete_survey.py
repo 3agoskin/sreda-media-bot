@@ -22,7 +22,7 @@ async def get_users():
     users_list = list()
     for user in all_users_list:
         user_tg_id, = user
-        if not cache.get(f'user_phone_{user_tg_id}'):
+        if not cache.get(f'user_phone_{user_tg_id}') and not cache.get(f'complete_survey_sending_{user_tg_id}'):
             users_list.append(user_tg_id)
             cache.setex(f'complete_survey_sending_{user_tg_id}', WEEK, 'True')
     print(users_list)
@@ -76,7 +76,7 @@ async def broadcaster() -> int:
 
 Вы недавно запустили бота «Среды», но не прошли опрос до конца. Пожалуйста, завершите его, нам важен каждый человек! 
 
-Опрос можно будет пройти еще 24 часа, а завтра вечером мы опубликуем результаты. 
+Опрос можно будет пройти до середины среды, а завтра вечером мы опубликуем результаты. 
 ____
 
 Возможно вы остановились на одном из этих этапов:
