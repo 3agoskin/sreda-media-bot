@@ -5,11 +5,10 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 TOKEN = os.getenv("TG_BOT_API_TOKEN")
-OFFER_USERNAME = 'ollyimp'
 
 BOT_VERSION = 0.1
 
-BOT_DB_NAME = "survey_new_year_tree"
+BOT_DB_NAME = "sreda_media"
 
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
