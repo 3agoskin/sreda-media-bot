@@ -60,68 +60,43 @@ class Database:
             self._conn.commit()
         cursor.close()
 
-    async def insert_start_user_and_source(self, tg_user_id: int, tg_username: str, tg_firstname:str, come_from: str):
+
+
+    async def insert_command_start_user_and_source(self, tg_user_id: int, come_from: str):
         created = self._get_now_formatted()
-        insert_query = f"""INSERT INTO command_start (created, tg_user_id, tg_username, tg_firstname, come_from)
-                           VALUES ("{created}", {tg_user_id}, "{tg_username}", "{tg_firstname}", "{come_from}")"""
+        insert_query = f"""INSERT INTO command_start (created, tg_user_id, come_from)
+                           VALUES ("{created}", {tg_user_id}, "{come_from}")"""
         self._execute_query(insert_query)
         logging.info(f"Start user {tg_user_id} from {come_from} added")
-    
-    async def insert_survey_result(self, tg_user_id: int, city: str, witch_tree: str, why_this_choise:str, where_bought:str, when_bought:str, which_eco: str, why_eco: str, result_survey: str, result_survey_opinion: str, user_phone:str):
+
+    async def insert_survey_new_year_tree_total(self, tg_user_id: int, liked: bool, share: bool = None, reason_dislike: str = None):
         created = self._get_now_formatted()
-        insert_query = f"""INSERT INTO survey_new_year_tree (created, tg_user_id, city, witch_tree, why_this_choise, where_bought, when_bought, which_eco, why_eco, result_survey, result_survey_opinion, user_phone)
-                           VALUES ("{created}", {tg_user_id}, "{city}", "{witch_tree}", "{why_this_choise}", "{where_bought}", "{when_bought}", "{which_eco}", "{why_eco}", "{result_survey}", "{result_survey_opinion}", "{user_phone}")"""
+        insert_query = f"""INSERT INTO survey_new_year_tree_total (created, tg_user_id, liked, share, reason_dislike)
+                           VALUES ("{created}", {tg_user_id}, "{liked}", "{share}", "{reason_dislike}")"""
         self._execute_query(insert_query)
-        logging.info(f"Survey result {tg_user_id} added")
+        logging.info(f"Survey_new_year_tree_total user {tg_user_id} added")
     
-    async def insert_santa(self, from_tg_user_id: int, to_tg_user_id: int, from_tg_user_username: str, from_tg_user_name:str, postcard_text:str, show_author:bool):
-        insert_query = f"""INSERT INTO postcard (from_tg_user_id, to_tg_user_id, from_tg_user_username, from_tg_user_name, postcard_text, show_author, send)
-                           VALUES ({from_tg_user_id}, {to_tg_user_id}, "{from_tg_user_username}", "{from_tg_user_name}", "{postcard_text}", "{show_author}", "False")"""
-        self._execute_query(insert_query)
-        logging.info(f"Santa from {from_tg_user_id} to {to_tg_user_id} added")
-
-
-    async def select_user_from_command_start(self, tg_user_id: int):
-        select_query = f"""SELECT tg_firstname from command_start
-                           where tg_user_id = {tg_user_id}"""
-        record = self._execute_query(select_query, select=True)
-        return record
-
-    async def select_all_users_from_command_start(self):
-        select_query = f"""SELECT distinct tg_user_id from command_start"""
-        record = self._execute_query(select_query, select=True, fetchone=False)
-        return record
-
-    async def select_user_from_survey_new_year_tree(self, tg_user_id: int):
-        select_query = f"""SELECT id from survey_new_year_tree
-                           where tg_user_id = {tg_user_id}"""
-        record = self._execute_query(select_query, select=True)
-        return record
-
-    async def select_postcard_from_secter_santa(self):
-        select_query = f'''SELECT id ,from_tg_user_id, to_tg_user_id, from_tg_user_username, from_tg_user_name, postcard_text, show_author from postcard
-                           where send="False"'''
-        record = self._execute_query(select_query, select=True, fetchone=False)
-        return record
-    
-    async def update_send_poscard(self, id: int):
-        update_query = f'''UPDATE postcard SET send="True" WHERE id={id}'''
+    async def update_survey_new_year_tree_total(self, tg_user_id: int, name_row:str, value_row:str):
+        update_query = f'''UPDATE survey_new_year_tree_total SET {name_row}="{value_row}"
+                            WHERE tg_user_id={tg_user_id}'''
         self._execute_query(update_query)
 
-    async def get_data(self) -> str:
-        logging.info("Exporting data into CSV............")
-        select_query = '''SELECT * FROM survey_new_year_tree;'''
-        cursor = self._conn.cursor()
-        cursor.execute(select_query)
 
-        with open("survey_new_year_tree.csv", "w") as csv_file:
-            csv_writer = csv.writer(csv_file, dialect='excel')
-            csv_writer.writerow([i[0] for i in cursor.description])
-            csv_writer.writerows(cursor)
+
+    # async def get_data(self) -> str:
+    #     logging.info("Exporting data into CSV............")
+    #     select_query = '''SELECT * FROM survey_new_year_tree;'''
+    #     cursor = self._conn.cursor()
+    #     cursor.execute(select_query)
+
+    #     with open("survey_new_year_tree.csv", "w") as csv_file:
+    #         csv_writer = csv.writer(csv_file, dialect='excel')
+    #         csv_writer.writerow([i[0] for i in cursor.description])
+    #         csv_writer.writerows(cursor)
         
-        dirpath = os.getcwd() + "/survey_new_year_tree.csv"
-        logging.info("Data exported Successfully into {}".format(dirpath))
-        return "survey_new_year_tree.csv"
+    #     dirpath = os.getcwd() + "/survey_new_year_tree.csv"
+    #     logging.info("Data exported Successfully into {}".format(dirpath))
+    #     return "survey_new_year_tree.csv"
 
 
     def _get_now_datetime(self) -> datetime.datetime:
