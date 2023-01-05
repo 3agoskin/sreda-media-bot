@@ -120,7 +120,7 @@ async def report(callback_query: types.CallbackQuery):
                     md.text('▪️', md.link('Телеграм', 'https://t.me/SredaMediaChannel/75')),
                     md.text('▪️', md.link('ВК', 'https://vk.com/sredamediapublic?w=wall-215394554_48')),
                     md.text(),
-                    md.text('▪️ Пройти опрос можно здесь - ', md.link('@SredaMediaBot', user_deep_link)),
+                    md.text('▪️ Пройти опрос можно здесь \- ', md.link('@SredaMediaBot', user_deep_link)),
                     md.text(),
                     md.text('\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_'),
                     md.italic('*принадлежит Meta,\nпризнанной экстремистской в России'),
